@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signup</title>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="signup.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel&family=VT323&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="form-popup">
+        <img class="bodyimg" src="images/bg.jpg" style="border-radius: 0 10px 10px 0;">
+        <div class="form-box">
+            <div class="form-details">
+                <h3 style="font-family:Cambria, Cochin, Georgia, Times, 'Times New Roman', serif">Create Account</h3>
+                <p style="font-family: 'VT323', monospace;">Please sign up using your personal information to stay
+                    connected with us</p>
+            </div>
+            <div class="form-content">
+                <h2 style="font-family: 'Cinzel', serif;">Sign up</h2>
+                <form action="#">
+                    <div class="input-field">
+                        <i class="fa-solid fa-user" style="color: black;"></i>
+                        <input type="text" placeholder="Name" id="name" required>
+                    </div>
+                    <div class="input-field">
+                        <i class="fa-solid fa-envelope" style="color: black; font-size: 0.9rem;"></i>
+                        <input type="email" placeholder="Email" id="email" required>
+                    </div>
+                    <div class="input-field">
+                        <i class="fa-solid fa-phone" style="color: black; font-size: 0.9rem;"></i>
+                        <input type="tel" placeholder="Phone" id="phone" pattern="[6789]\d{9}" required>
+                    </div>
+                    <div class="input-field">
+                        <i class="fa-solid fa-lock" style="color: black;"></i>
+                        <input type="password" placeholder="Password" id="password" autocomplete="off" required>
+                    </div>
+                    <div class="input-field">
+                        <i class="fa-solid fa-lock" style="color: black;"></i>
+                        <input type="password" placeholder="Confirm Password" id="cpassword" autocomplete="off"
+                            required>
+                    </div>
+                    <div class="gap1">
+                        <button type="button" id="send-otp" name="send-otp" class="btn btn-success"
+                            style="padding: 0.2rem; margin-top: 0.2rem; font-size: 1rem; cursor: pointer; margin: 0.9rem;">
+                            Send OTP
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div id="phone-verification" style="display: none;">
+                <h3>Phone Verification</h3>
+                <p>Enter the OTP sent to your phone number: <span id="phone-number"></span></p>
+                <input type="text" id="otp-code" placeholder="Enter OTP">
+                <button type="button" id="verify-otp" name="verify-otp" class="btn btn-success"
+                    style="padding: 0.2rem; margin-top: 0.2rem; font-size: 1rem; cursor: pointer; margin: 0.9rem;">
+                    Verify OTP
+                </button>
+            </div>
+
+
+            <div class="bottin-link">
+                Already have a acccount?
+                <a href="login.html" class="signup">Login</a>
+                <br>
+                <span class="back">
+                    <a href="index.html" class="back">BACK
+            </div>
+            </span>
+        </div>
+    </div>
+    </div>
+    <!-- Firebase -->
+
+</body>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-analytics.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification, onAuthStateChanged, signOut, updateProfile, PhoneAuthProvider, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyAeZeQWmUr8Q6RkSwZhplQPG8-uKTLmvV8",
+        authDomain: "iotagrosense.firebaseapp.com",
+        databaseURL: "https://iotagrosense-default-rtdb.firebaseio.com",
+        projectId: "iotagrosense",
+        storageBucket: "iotagrosense.appspot.com",
+        messagingSenderId: "273077172049",
+        appId: "1:273077172049:web:7e905c7a24c833679d4570",
+        measurementId: "G-VRXQB6PDTF"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const auth = getAuth();
+
+
+    window.recaptchaVerifier = new RecaptchaVerifier('send-otp', {
+        'size': 'invisible',
+        'callback': (response) => {
+
+        }
+    }, auth);
+
+    // Function to send OTP to the user's phone
+    function sendPhoneOTP(phoneNumber) {
+        const appVerifier = window.recaptchaVerifier;
+        return signInWithPhoneNumber(auth, phoneNumber, appVerifier);
+    }
+
+    // Function to verify the phone OTP
+    function verifyPhoneOTP(confirmationResult, code) {
+        return confirmationResult.confirm(code);
+    }
+
+    // Event listener for the Send OTP button
+    document.getElementById('send-otp').addEventListener('click', () => {
+        const phoneNumber = '+91' + document.getElementById('phone').value.replace(/\D/g, '');
+        var password = document.getElementById("password").value;
+        var cpassword = document.getElementById("cpassword").value;
+        if (confirm_password(password, cpassword) && validatePhoneNumber(phoneNumber)) {
+            sendPhoneOTP(phoneNumber)
+                .then((confirmationResult) => {
+                    window.confirmationResult = confirmationResult;
+                    // Move to the section where the user can enter the OTP
+                    document.getElementById('phone-verification').style.display = 'block';
+                })
+                .catch((error) => {
+                    console.error("Error during signInWithPhoneNumber", error);
+                });
+        }
+
+        else if (confirm_password(password, cpassword) == 1 && validatePhoneNumber(phoneNumber) == 0) {
+            alert("Invalid Phone Number. Please enter a 10-digit number starting with 7, 8, or 9.");
+            location.reload();
+        }
+
+        else {
+            alert("Password and Confirm password are not same");
+            location.reload();
+        }
+    });
+
+    // Event listener for the Verify OTP button
+    document.getElementById('verify-otp').addEventListener('click', () => {
+        const code = document.getElementById('otp-code').value;
+        verifyPhoneOTP(window.confirmationResult, code)
+            .then(() => {
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const name = document.getElementById('name');
+
+
+                createUserWithEmailAndPassword(auth, email, password)
+                    .then((userCredential) => {
+                        sendEmailVerification(userCredential.user)
+                            .then(() => {
+                                alert('Registration successfull !!')
+                                alert('Email verification sent!');
+                                // Registration successful
+                                // Redirect to another page or inform the user
+                                location.reload();
+                            })
+
+                            .catch((error) => {
+                                console.error("Error sending email verification", error);
+                            });
+                        updateProfile(user, { displayName: name })
+                            .then(() => {
+                                console.log("Display name set successfully");
+
+                            })
+                            .catch((error) => {
+                                console.error("Error setting display name:", error.message);
+
+                            });
+                    })
+                    .catch((error) => {
+                        console.error("Error creating user with email and password", error);
+                    });
+
+            })
+            .catch((error) => {
+                alert("Enter the correct OTP!!!");
+            });
+    });
+    // Password and confirm password check
+    function confirm_password(password, cpassword) {
+        if (password == cpassword) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    // Phone number check
+    function validatePhoneNumber() {
+        var phoneNumberInput = document.getElementById("phone");
+        var isValid = /^[6789]\d{9}$/.test(phoneNumberInput.value);
+        if (!isValid) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+</script>
+<script src="signup.js"></script>
+
+</html>
